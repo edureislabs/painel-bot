@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== TABELAS DO BOT ==========
+
+model Punishment {
+  id          Int       @id @default(autoincrement())
+  guildId     String
+  userId      String
+  moderatorId String
+  type        String
+  motivo      String?
+  expiresAt   DateTime?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@index([guildId])
+  @@index([userId])
+  @@index([guildId, userId])
+}
+
+model AutoModLink {
+  id        String   @id @default(cuid())
+  guildId   String
+  channelId String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([guildId, channelId])
+}
+
+model Log {
+  id          Int      @id @default(autoincrement())
+  guildId     String
+  type        String
+  userId      String?
+  moderatorId String?
+  motivo      String?
+  createdAt   DateTime @default(now())
+
+  @@index([guildId])
+  @@index([guildId, userId])
+}
+
+model Setting {
+  guildId          String   @id
+  logChannelId     String?
+  muteRoleId       String?
+  modChannelId     String?   // Canal para logs de moderação (bans, kicks, mutes)
+  prefix           String    @default("!")
+  lang             String    @default("pt-BR")
+  autoModEnabled   Boolean   @default(true)
+  welcomeChannelId String?   // Canal de boas-vindas (pode ser usado como fallback)
+}
+
+// ========== TABELAS DO NEXTAUTH ==========
+
+model User {
+  id            String    @id @default(cuid())
+  discordId     String?   @unique
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Welcome {
+  guildId      String   @id
+  channelId    String?
+  message      String?
+  enabled      Boolean  @default(true)
+  autoroleId   String?
+  templateJson Json?
+  bgImage      String?
+  sendType     String?  @default("image_embed")
+  embedJson    Json?
+  buttonsJson  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
