@@ -34,18 +34,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string
+      session.accessToken = token.accessToken as string | undefined
       return session
     }
-  }, // ✅ vírgula aqui
-
-  pages: {
-    signIn: "/"
   },
+
+  // ❌ Sem pages.signIn (usa padrão /api/auth/signin)
 
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60,
   },
 
-  secret: process.env.AUTH_SECRET
+  secret: process.env.NEXTAUTH_SECRET,
 })
