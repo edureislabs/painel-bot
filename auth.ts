@@ -1,66 +1,54 @@
-import NextAuth, { DefaultSession } from "next-auth"
-import DiscordProvider from "next-auth/providers/discord"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-import type { JWT } from "next-auth/jwt"
+import NextAuth from "next-auth"
+import Discord from "next-auth/providers/discord"
 
 declare module "next-auth" {
-    interface Session {
-        accessToken?: string
-        user: {
-            id?: string
-        } & DefaultSession["user"]
-        expiresAt?: number
-    }
+  interface Session {
+    accessToken?: string
+  }
 }
 
 declare module "next-auth/jwt" {
-    interface JWT {
-        accessToken?: string
-        refreshToken?: string
-        expiresAt?: number
-        userId?: string
-    }
+  interface JWT {
+    accessToken?: string
+  }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    adapter: PrismaAdapter(prisma),
-    providers: [
-        DiscordProvider({
-            clientId: process.env.DISCORD_CLIENT_ID!,
-            clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-            authorization: {
-                params: {
-                    scope: "identify guilds email",
-                    prompt: "consent"
-                }
-            }
-        })
-    ],
-    session: {
-        strategy: "jwt",
-        maxAge: 30 * 24 * 60 * 60,
+  providers: [
+    Discord({
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "identify guilds"
+        }
+      }
+    })
+  ],
+
+  callbacks: {
+    async jwt({ token, account }) {
+      // 🔥 Salva o accessToken quando o usuário loga
+      if (account) {
+        token.accessToken = account.access_token
+      }
+      return token
     },
-    callbacks: {
-        async jwt({ token, account, profile }) {
-            if (account) {
-                token.accessToken = account.access_token ?? undefined
-                token.refreshToken = account.refresh_token ?? undefined
-                token.expiresAt = account.expires_at ?? undefined
-                token.userId = profile?.id as string | undefined
-            }
-            return token
-        },
-        async session({ session, token }) {
-    console.log("📝 Session Callback - Token:", token)
-    console.log("📝 Session Callback - accessToken:", token.accessToken)
-    
-    if (token.accessToken) {
-        session.accessToken = token.accessToken
+
+    async session({ session, token }) {
+      // 🔥 Injeta o token na sessão
+      session.accessToken = token.accessToken as string
+      return session
     }
-    
-    return session
-}
-    },
-    debug: false,
+  },
+
+  pages: {
+    signIn: "/"
+  },
+
+  session: {
+    strategy: "jwt"
+  },
+
+  secret: process.env.AUTH_SECRET
 })
