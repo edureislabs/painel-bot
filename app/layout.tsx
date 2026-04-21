@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-    title: "Painel do Bot",
+    title: "Painel EN Bot",
     description: "Painel administrativo do bot",
 }
 
