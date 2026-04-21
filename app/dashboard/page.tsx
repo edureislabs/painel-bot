@@ -8,8 +8,8 @@ export default async function Dashboard() {
 
   // Se não houver sessão, redireciona para login (com callback para voltar ao dashboard)
   if (!session) {
-    redirect("/api/auth/signin?callbackUrl=/dashboard")
-  }
+  redirect("/api/auth/signin?callbackUrl=/dashboard")
+}
 
   // Se a sessão existir mas não tiver accessToken (raro), também redireciona
   if (!session?.accessToken) {

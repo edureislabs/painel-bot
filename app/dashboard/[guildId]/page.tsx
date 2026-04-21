@@ -26,7 +26,7 @@ export default function GuildDashboard() {
 
         // Se não estiver autenticado, redireciona para login com callback para voltar à página atual
         if (response.status === 401) {
-          router.push(`/api/auth/signin?callbackUrl=/dashboard/${guildId}`)
+          router.push(`/api/auth/signin?callbackUrl=${encodeURIComponent(window.location.pathname)}`)
           return
         }
 

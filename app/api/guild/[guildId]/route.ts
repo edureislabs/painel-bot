@@ -19,6 +19,7 @@ export async function GET(
   const { guildId } = await context.params
 
   try {
+    
     const res = await fetch(`https://discord.com/api/users/@me/guilds`, {
       headers: {
         Authorization: `Bearer ${session.accessToken}`
@@ -43,7 +44,8 @@ export async function GET(
     const guilds = await res.json()
 
     const guild = guilds.find((g: any) => g.id === guildId)
-
+console.log("🔍 Verificando sessão:", !!session, "Token:", !!session?.accessToken)
+console.log("🍪 Cookies recebidos:", req.headers.get("cookie"))
     if (!guild) {
       return NextResponse.json(
         { error: "Guild not found or you don't have access" },
@@ -58,5 +60,7 @@ export async function GET(
       { error: "Internal server error" },
       { status: 500 }
     )
+    
   }
+  
 }
