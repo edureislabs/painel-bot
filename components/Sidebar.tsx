@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 interface SidebarProps {
@@ -16,7 +16,6 @@ interface GuildInfo {
 interface NavItem {
     name: string
     href: (id: string) => string
-    icon: string
     badge?: string
 }
 
@@ -24,40 +23,61 @@ const navSections: { title: string; items: NavItem[] }[] = [
     {
         title: "GERAL",
         items: [
-            { name: "Visão Geral", href: (id: string) => `/dashboard/${id}`, icon: "🏠" },
-            { name: "Boas-vindas", href: (id: string) => `/dashboard/${id}/welcome`, icon: "👋" },
+            { name: "Visão Geral", href: (id: string) => `/dashboard/${id}` },
+            { name: "Boas-vindas", href: (id: string) => `/dashboard/${id}/welcome` },
         ]
     },
     {
         title: "MODERAÇÃO",
         items: [
-            { name: "Punições", href: (id: string) => `/dashboard/${id}/punicoes`, icon: "🔨" },
-            { name: "Logs", href: (id: string) => `/dashboard/${id}/logs`, icon: "📋" },
-            { name: "AutoMod", href: (id: string) => `/dashboard/${id}/automod`, icon: "🤖" },
+            { name: "Punições", href: (id: string) => `/dashboard/${id}/punicoes` },
+            { name: "Logs", href: (id: string) => `/dashboard/${id}/logs` },
+            { name: "AutoMod", href: (id: string) => `/dashboard/${id}/automod` },
         ]
     },
     {
         title: "CONFIGURAÇÕES",
         items: [
-            { name: "Configurações", href: (id: string) => `/dashboard/${id}/configuracoes`, icon: "⚙️", badge: "NOVO!" },
+            { name: "Configurações", href: (id: string) => `/dashboard/${id}/configuracoes`, badge: "NOVO!" },
         ]
     }
 ]
 
 export default function Sidebar({ guildId }: SidebarProps) {
     const pathname = usePathname()
+    const router = useRouter()
     const [guild, setGuild] = useState<GuildInfo | null>(null)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        fetch(`/api/guild/${guildId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.guild) setGuild(data.guild)
+        async function fetchGuildInfo() {
+            try {
+                const response = await fetch(`/api/guild/${guildId}`, {
+                    credentials: "include"
+                })
+
+                if (response.status === 401) {
+                    router.push(`/api/auth/signin?callbackUrl=/dashboard/${guildId}`)
+                    return
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}`)
+                }
+
+                const data = await response.json()
+                setGuild(data.guild)
+            } catch (err) {
+                console.error("Erro ao carregar dados do servidor na sidebar:", err)
+                setError("Não foi possível carregar o servidor")
+            } finally {
                 setLoading(false)
-            })
-            .catch(() => setLoading(false))
-    }, [guildId])
+            }
+        }
+
+        fetchGuildInfo()
+    }, [guildId, router])
 
     const isActive = (href: string) => {
         return pathname === href || pathname.startsWith(href + "/")
@@ -76,17 +96,24 @@ export default function Sidebar({ guildId }: SidebarProps) {
                         <div className="w-10 h-10 rounded-full bg-gray-700 animate-pulse" />
                         <div className="h-5 w-32 bg-gray-700 rounded animate-pulse" />
                     </div>
+                ) : error ? (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 text-xs">
+                            ERRO
+                        </div>
+                        <span className="text-red-400 text-sm">{error}</span>
+                    </div>
                 ) : guild ? (
                     <div className="flex items-center gap-3">
                         {guildIconUrl ? (
                             <img
                                 src={guildIconUrl}
                                 alt={guild.name}
-                                className="w-10 h-10 rounded-full border-2 border-[#FF6B00]"
+                                className="w-10 h-10 rounded-full border-2 border-[#FF6B00] object-cover"
                             />
                         ) : (
-                            <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center text-white font-bold">
-                                {guild.name.charAt(0)}
+                            <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center text-white font-bold text-lg">
+                                {guild.name.charAt(0).toUpperCase()}
                             </div>
                         )}
                         <span className="font-bold text-lg text-white truncate">
@@ -121,10 +148,7 @@ export default function Sidebar({ guildId }: SidebarProps) {
                                             }
                                         `}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-lg">{item.icon}</span>
-                                            <span className="text-sm font-medium">{item.name}</span>
-                                        </div>
+                                        <span className="text-sm font-medium">{item.name}</span>
                                         {item.badge && (
                                             <span className="text-[10px] bg-[#FF6B00] text-white px-1.5 py-0.5 rounded-full">
                                                 {item.badge}
@@ -138,28 +162,25 @@ export default function Sidebar({ guildId }: SidebarProps) {
                 ))}
             </nav>
 
-            {/* Rodapé: Links legais e trocar servidor */}
+            {/* Rodapé */}
             <div className="p-4 border-t border-gray-800 space-y-2">
-                {/* Links legais */}
                 <div className="flex flex-col gap-1 mb-2">
                     <Link
                         href="/terms"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors text-gray-400 text-sm"
+                        className="flex items-center px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors text-gray-400 text-sm"
                     >
-
-                        <span>Termos de Serviço</span>
+                        Termos de Serviço
                     </Link>
                     <Link
                         href="/privacy"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors text-gray-400 text-sm"
+                        className="flex items-center px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors text-gray-400 text-sm"
                     >
-                        <span>Política de Privacidade</span>
+                        Política de Privacidade
                     </Link>
                 </div>
-                {/* Trocar servidor */}
                 <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors text-gray-400"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors text-gray-400"
                 >
                     <span>←</span>
                     <span className="text-sm">Trocar servidor</span>
