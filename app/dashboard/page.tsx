@@ -10,24 +10,9 @@ export default async function Dashboard() {
         redirect("/")
     }
 
-    if (!session.accessToken) {
-        return (
-            <main className="min-h-screen bg-gradient-to-br from-[#0d0d0d] via-[#1a1a1a] to-[#1a1a1a] text-white p-8">
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-xl p-6 text-center">
-                        <p className="text-yellow-400">⚠️ Sessão expirada</p>
-                        <p className="text-gray-400 mt-2">Por favor, faça login novamente.</p>
-                        <Link 
-                            href="/api/auth/signin"
-                            className="mt-4 inline-block bg-[#FF6B00] hover:bg-[#E55A00] text-white px-4 py-2 rounded-lg transition-colors"
-                        >
-                            Fazer login novamente
-                        </Link>
-                    </div>
-                </div>
-            </main>
-        )
-    }
+    if (!session?.accessToken) {
+    redirect("/api/auth/signin")
+}
 
     console.log("🔑 Token presente na sessão:", !!session.accessToken)
 

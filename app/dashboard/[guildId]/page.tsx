@@ -18,23 +18,36 @@ export default function GuildDashboard() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        async function fetchGuild() {
-            try {
-                const response = await fetch(`/api/guild/${guildId}`, {
-    credentials: "include"
-})
-                if (response.ok) {
-                    const data = await response.json()
-                    setGuild(data.guild)
-                }
-            } catch (error) {
-                console.error("Erro ao carregar servidor:", error)
-            } finally {
-                setLoading(false)
+    async function fetchGuild() {
+        try {
+            const response = await fetch(`/api/guild/${guildId}`, {
+                credentials: "include"
+            })
+
+            // 🔥 se não estiver logado → manda logar
+            if (response.status === 401) {
+                router.push("/api/auth/signin")
+                return
             }
+
+            if (response.status === 404) {
+                router.push("/dashboard")
+                return
+            }
+
+            if (response.ok) {
+                const data = await response.json()
+                setGuild(data.guild)
+            }
+        } catch (error) {
+            console.error("Erro ao carregar servidor:", error)
+        } finally {
+            setLoading(false)
         }
-        fetchGuild()
-    }, [guildId])
+    }
+
+    fetchGuild()
+}, [guildId])
 
     if (loading) {
         return (

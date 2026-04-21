@@ -27,20 +27,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, account }) {
-      // 🔥 Salva o accessToken quando o usuário loga
-      if (account) {
-        token.accessToken = account.access_token
-      }
-      return token
-    },
-
-    async session({ session, token }) {
-      // 🔥 Injeta o token na sessão
-      session.accessToken = token.accessToken as string
-      return session
+  async jwt({ token, account }) {
+    if (account) {
+      token.accessToken = account.access_token
     }
+    return token
   },
+  async session({ session, token }) {
+    session.accessToken = token.accessToken
+    return session
+  }
+},
 
   pages: {
     signIn: "/"
