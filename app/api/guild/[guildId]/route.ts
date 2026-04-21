@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 export async function GET(
   req: Request,
-  { params }: { params: { guildId: string } }
+  context: { params: Promise<{ guildId: string }> }
 ) {
   const session = await auth()
 
@@ -14,6 +14,9 @@ export async function GET(
       { status: 401 }
     )
   }
+
+  // Aguarda a resolução da Promise de params
+  const { guildId } = await context.params
 
   try {
     const res = await fetch(`https://discord.com/api/users/@me/guilds`, {
@@ -39,7 +42,7 @@ export async function GET(
 
     const guilds = await res.json()
 
-    const guild = guilds.find((g: any) => g.id === params.guildId)
+    const guild = guilds.find((g: any) => g.id === guildId)
 
     if (!guild) {
       return NextResponse.json(
