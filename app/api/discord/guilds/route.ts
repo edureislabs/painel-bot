@@ -1,10 +1,11 @@
 import { auth } from "@/auth"
+import { NextResponse } from "next/server"
 
 export async function GET() {
   const session = await auth()
 
   if (!session?.accessToken) {
-    return Response.json({ error: "Não autenticado" }, { status: 401 })
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
   }
 
   const res = await fetch("https://discord.com/api/users/@me/guilds", {
@@ -13,23 +14,28 @@ export async function GET() {
     },
   })
 
+  // Se token expirou, avisa o cliente
+  if (res.status === 401) {
+    return NextResponse.json(
+      { error: "Token Discord expirado" },
+      { status: 401 }
+    )
+  }
+
   const guilds = await res.json()
 
-  // 🔥 DEBUG (muito importante)
   console.log("DISCORD RESPONSE:", guilds)
 
-  // 🛑 proteção contra erro
   if (!Array.isArray(guilds)) {
-    return Response.json(
+    return NextResponse.json(
       { error: "Erro ao buscar guilds", details: guilds },
       { status: 500 }
     )
   }
 
-  // filtrar admin (0x8)
   const adminGuilds = guilds.filter(
     (g: any) => (g.permissions & 0x8) === 0x8
   )
 
-  return Response.json(adminGuilds)
+  return NextResponse.json(adminGuilds)
 }

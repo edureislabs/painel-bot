@@ -27,25 +27,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-  async jwt({ token, account }) {
-    if (account) {
-      token.accessToken = account.access_token
+    async jwt({ token, account }) {
+      // Persiste o accessToken do Discord no token JWT
+      if (account) {
+        token.accessToken = account.access_token
+      }
+      // 🔁 Garante que o token seja mantido mesmo em recargas de página
+      return token
+    },
+    async session({ session, token }) {
+      // Repassa o accessToken do token JWT para a sessão
+      session.accessToken = token.accessToken as string | undefined
+      return session
     }
-    return token
   },
-  async session({ session, token }) {
-    session.accessToken = token.accessToken
-    return session
-  }
-},
 
-  pages: {
-    signIn: "/"
-  },
+  // ⚠️ Removemos a configuração pages.signIn para evitar redirecionamento indesejado à "/"
+  // O NextAuth usará a página padrão de signIn ou a que você definir em app/api/auth/signin
 
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 dias (alinhado com expiração do token Discord)
   },
 
-  secret: process.env.AUTH_SECRET
+  secret: process.env.AUTH_SECRET,
 })

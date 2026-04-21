@@ -7,10 +7,10 @@ export async function GET(
 ) {
   const session = await auth()
 
-  // ❌ NUNCA usar redirect aqui
+  // Se não houver sessão ou token de acesso, retorna 401
   if (!session || !session.accessToken) {
     return NextResponse.json(
-      { error: "Unauthorized" },
+      { error: "Unauthorized - No session or access token" },
       { status: 401 }
     )
   }
@@ -22,13 +22,28 @@ export async function GET(
       }
     })
 
+    // Se o Discord retornar 401, o token expirou
+    if (res.status === 401) {
+      return NextResponse.json(
+        { error: "Discord token expired" },
+        { status: 401 }
+      )
+    }
+
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: "Failed to fetch guilds from Discord" },
+        { status: res.status }
+      )
+    }
+
     const guilds = await res.json()
 
     const guild = guilds.find((g: any) => g.id === params.guildId)
 
     if (!guild) {
       return NextResponse.json(
-        { error: "Guild not found" },
+        { error: "Guild not found or you don't have access" },
         { status: 404 }
       )
     }
@@ -36,9 +51,8 @@ export async function GET(
     return NextResponse.json({ guild })
   } catch (error) {
     console.error("Erro API guild:", error)
-
     return NextResponse.json(
-      { error: "Internal error" },
+      { error: "Internal server error" },
       { status: 500 }
     )
   }
