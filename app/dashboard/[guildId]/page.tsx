@@ -20,7 +20,9 @@ export default function GuildDashboard() {
     useEffect(() => {
         async function fetchGuild() {
             try {
-                const response = await fetch(`/api/guild/${guildId}`)
+                const response = await fetch(`/api/guild/${guildId}`, {
+    credentials: "include"
+})
                 if (response.ok) {
                     const data = await response.json()
                     setGuild(data.guild)
