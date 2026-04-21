@@ -1,42 +1,66 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
-import { checkGuildAccess } from '@/lib/checkGuildAccess'
+import NextAuth from "next-auth"
+import Discord from "next-auth/providers/discord"
 
-export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
-
-  // Ignorar rotas de autenticação
-  if (pathname.startsWith('/api/auth')) {
-    return NextResponse.next()
+declare module "next-auth" {
+  interface Session {
+    accessToken?: string
   }
-
-  // Verificar se é uma rota de dashboard de um servidor específico
-  const match = pathname.match(/^\/dashboard\/([^\/]+)/)
-  if (!match) return NextResponse.next()
-
-  const guildId = match[1]
-
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  })
-
-  // Se não autenticado, redireciona para a página de sign‑in padrão do NextAuth
-  if (!token?.accessToken) {
-    const signInUrl = new URL('/api/auth/signin', request.url)
-    signInUrl.searchParams.set('callbackUrl', pathname)
-    return NextResponse.redirect(signInUrl)
-  }
-
-  const hasAccess = await checkGuildAccess(guildId, token.accessToken as string)
-  if (!hasAccess) {
-    return NextResponse.redirect(new URL('/acesso-negado', request.url))
-  }
-
-  return NextResponse.next()
 }
 
-export const config = {
-  matcher: '/dashboard/:guildId/:path*',
+declare module "next-auth/jwt" {
+  interface JWT {
+    accessToken?: string
+  }
 }
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  providers: [
+    Discord({
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "identify guilds"
+        }
+      }
+    })
+  ],
+
+  callbacks: {
+    async jwt({ token, account }) {
+      // Persiste o accessToken do Discord no token JWT
+      if (account) {
+        token.accessToken = account.access_token
+      }
+      return token
+    },
+    async session({ session, token }) {
+      // Repassa o accessToken do token JWT para a sessão
+      session.accessToken = token.accessToken as string | undefined
+      return session
+    }
+  },
+
+  // Configuração de cookies para evitar problemas em produção
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+
+  session: {
+    strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 dias (alinhado com expiração do token Discord)
+  },
+
+  secret: process.env.NEXTAUTH_SECRET,
+
+  // Debug: apenas em desenvolvimento (opcional)
+  debug: process.env.NODE_ENV === "development",
+})
