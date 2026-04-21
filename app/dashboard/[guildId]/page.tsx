@@ -37,6 +37,9 @@ export default function GuildDashboard() {
         if (response.ok) {
           const data = await response.json()
           setGuild(data.guild)
+        } else {
+          // Tratar outros erros
+          console.error("Erro na API:", response.status)
         }
       } catch (error) {
         console.error("Erro ao carregar servidor:", error)
@@ -45,13 +48,19 @@ export default function GuildDashboard() {
       }
     }
 
-    fetchGuild()
+    if (guildId) {
+      fetchGuild()
+    }
   }, [guildId, router])
 
+  // Não redirecionar enquanto estiver carregando para permitir que a sidebar tente buscar os dados
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0d0d0d] via-[#1a1a1a] to-[#1a1a1a] text-white flex items-center justify-center">
-        <p className="text-gray-400">Carregando...</p>
+      <div className="flex min-h-screen bg-gradient-to-br from-[#0d0d0d] via-[#1a1a1a] to-[#1a1a1a] text-white">
+        <Sidebar guildId={guildId} />
+        <main className="ml-64 flex-1 p-8 flex items-center justify-center">
+          <p className="text-gray-400">Carregando...</p>
+        </main>
       </div>
     )
   }
@@ -60,7 +69,7 @@ export default function GuildDashboard() {
     <div className="flex min-h-screen bg-gradient-to-br from-[#0d0d0d] via-[#1a1a1a] to-[#1a1a1a] text-white">
       <Sidebar guildId={guildId} />
       <main className="ml-64 flex-1 p-8">
-        {/* Cabeçalho do servidor */}
+        {/* Cabeçalho do servidor (opcional, já que a sidebar mostra o nome) */}
         <div className="flex items-center gap-4 mb-8">
           {guild?.icon && (
             <img
@@ -81,10 +90,6 @@ export default function GuildDashboard() {
             onClick={() => router.push(`/dashboard/${guildId}/welcome`)}
             className="group bg-[#1a1a1a] hover:bg-[#202020] rounded-xl p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,107,0,0.15)] border border-transparent hover:border-[#FF6B00]/30"
           >
-            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-              {/* Espaço para ícone SVG ou texto */}
-              <span className="sr-only">Boas-vindas</span>
-            </div>
             <h2 className="text-xl font-semibold mb-2">Boas-vindas</h2>
             <p className="text-gray-400 text-sm">
               Configure mensagens de boas-vindas, imagem personalizada, botões interativos e cargo automático.
@@ -96,9 +101,6 @@ export default function GuildDashboard() {
             onClick={() => router.push(`/dashboard/${guildId}/logs`)}
             className="group bg-[#1a1a1a] hover:bg-[#202020] rounded-xl p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,107,0,0.15)] border border-transparent hover:border-[#FF6B00]/30"
           >
-            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="sr-only">Logs</span>
-            </div>
             <h2 className="text-xl font-semibold mb-2">Logs</h2>
             <p className="text-gray-400 text-sm">
               Visualize o histórico completo de ações de moderação, como bans, kicks, mutes e warns.
@@ -110,9 +112,6 @@ export default function GuildDashboard() {
             onClick={() => router.push(`/dashboard/${guildId}/automod`)}
             className="group bg-[#1a1a1a] hover:bg-[#202020] rounded-xl p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,107,0,0.15)] border border-transparent hover:border-[#FF6B00]/30"
           >
-            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="sr-only">AutoMod</span>
-            </div>
             <h2 className="text-xl font-semibold mb-2">AutoMod</h2>
             <p className="text-gray-400 text-sm">
               Ative a moderação automática por canal, bloqueie links ou palavras proibidas.
@@ -124,9 +123,6 @@ export default function GuildDashboard() {
             onClick={() => router.push(`/dashboard/${guildId}/punicoes`)}
             className="group bg-[#1a1a1a] hover:bg-[#202020] rounded-xl p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,107,0,0.15)] border border-transparent hover:border-[#FF6B00]/30"
           >
-            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="sr-only">Punições</span>
-            </div>
             <h2 className="text-xl font-semibold mb-2">Punições</h2>
             <p className="text-gray-400 text-sm">
               Gerencie membros punidos, visualize histórico e aplique novas penalidades.
@@ -138,9 +134,6 @@ export default function GuildDashboard() {
             onClick={() => router.push(`/dashboard/${guildId}/configuracoes`)}
             className="group bg-[#1a1a1a] hover:bg-[#202020] rounded-xl p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,107,0,0.15)] border border-transparent hover:border-[#FF6B00]/30"
           >
-            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="sr-only">Configurações</span>
-            </div>
             <h2 className="text-xl font-semibold mb-2">Configurações</h2>
             <p className="text-gray-400 text-sm">
               Configure canais de logs, cargo de mute e outras preferências do servidor.
