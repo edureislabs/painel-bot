@@ -72,18 +72,18 @@ export default function Home() {
             >
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <motion.div
-    className="flex items-center gap-3 cursor-pointer"
-    whileHover={{ scale: 1.05 }}
-    transition={{ type: "spring", stiffness: 400 }}
->
-    <Image
-        src="/logo-edunex.png"
-        alt="EduNex Logo"
-        width={140}
-        height={40}
-        className="object-contain"
-    />
-</motion.div>
+                        className="flex items-center gap-3 cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 400 }}
+                    >
+                        <Image
+    src="/logo-edunex.png"
+    alt="EduNex Logo"
+    width={140}
+    height={40}
+    className="object-contain"
+/>
+                    </motion.div>
                     <div className="hidden md:flex items-center gap-8">
                         {["Empresa", "Soluções", "Tecnologias", "Projetos", "Contato"].map((item, i) => (
                             <motion.a
