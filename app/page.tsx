@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import AuthButton from "@/components/AuthButton"
 import ParticlesBackground from "@/components/ParticlesBackground"
+import Image from "next/image"
 import { motion, useScroll, useTransform, useMotionValue, useSpring, useInView, AnimatePresence } from "framer-motion"
 
 export default function Home() {
@@ -77,7 +78,7 @@ export default function Home() {
                         transition={{ type: "spring", stiffness: 400 }}
                     >
                         <Image
-    src="/logo-edunex.png"
+    src="/edunex site.png"
     alt="EduNex Logo"
     width={140}
     height={40}
