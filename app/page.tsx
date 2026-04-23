@@ -80,8 +80,8 @@ export default function Home() {
                         <Image
     src="/images/edunex site.png"
     alt="EduNex Logo"
-    width={140}
-    height={40}
+    width={200}
+    height={60}
     className="object-contain"
 />
                     </motion.div>
