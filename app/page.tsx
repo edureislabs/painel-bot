@@ -78,7 +78,7 @@ export default function Home() {
                         transition={{ type: "spring", stiffness: 400 }}
                     >
                         <Image
-    src="../public/images/edunex site.png"
+    src="/images/edunex site.png"
     alt="EduNex Logo"
     width={140}
     height={40}
