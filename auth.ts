@@ -1,3 +1,4 @@
+// auth.ts
 import NextAuth from "next-auth"
 import Discord from "next-auth/providers/discord"
 
@@ -39,11 +40,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }
   },
 
-  // ❌ Sem pages.signIn (usa padrão /api/auth/signin)
+  // 🔒 Força cookies seguros em produção (HTTPS)
+  useSecureCookies: process.env.NODE_ENV === "production",
+
+  // 🍪 Configuração explícita dos cookies para evitar conflitos de domínio
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        // Define o domínio correto automaticamente baseado em NEXTAUTH_URL
+        domain: process.env.NEXTAUTH_URL
+          ? new URL(process.env.NEXTAUTH_URL).hostname
+          : undefined,
+      },
+    },
+  },
 
   session: {
     strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60, // 7 dias (mesmo tempo de expiração do token do Discord)
   },
 
   secret: process.env.NEXTAUTH_SECRET,
