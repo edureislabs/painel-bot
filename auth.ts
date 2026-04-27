@@ -44,21 +44,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   useSecureCookies: process.env.NODE_ENV === "production",
 
   // 🍪 Configuração explícita dos cookies para evitar conflitos de domínio
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        // Define o domínio correto automaticamente baseado em NEXTAUTH_URL
-        domain: process.env.NEXTAUTH_URL
-          ? new URL(process.env.NEXTAUTH_URL).hostname
-          : undefined,
-      },
+cookies: {
+  sessionToken: {
+    name: `next-auth.session-token`,
+    options: {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: true,
+      domain: process.env.NEXTAUTH_URL 
+        ? new URL(process.env.NEXTAUTH_URL).hostname 
+        : undefined,
     },
   },
+},
 
   session: {
     strategy: "jwt",
